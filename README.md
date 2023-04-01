@@ -1,5 +1,6 @@
 ## Gyroscope
-Animate the gyroscope motion
+Animate the gyroscope motion.
+
 This project is devoloped in ![python](https://img.shields.io/badge/python-3.x-green).
 
 ## Project Status: ![still-work-on-it](https://img.shields.io/badge/Still--Work-On%20It-orange)
