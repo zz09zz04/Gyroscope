@@ -2,5 +2,7 @@
 Animate the gyroscope motion
 
 
-https://user-images.githubusercontent.com/117817644/229278431-015b4e7f-37fd-4489-a689-6988de4170f5.mp4
+
+
+https://user-images.githubusercontent.com/117817644/229279002-c76c0bc1-2770-4dfd-ac1c-3b75bdc22568.mp4
 
