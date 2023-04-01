@@ -16,8 +16,8 @@ import math as m
 import serial                       # import serial module, PySerial 3.5 
 from datetime import datetime       # import time module
 
-import threading
-from multiprocessing import Process
+#import threading
+#from multiprocessing import Process
 
 import keyboard as kb
 
@@ -42,26 +42,13 @@ def Rz(theta):
                    [ 0           , 0            , 1 ]])
 				   
 
-COM_PORT = 'COM15'                     # assign communication port name
+COM_PORT = 'COM3'                     # assign communication port name
 BAUD = 115200                         # set baud
 
 #ser = serial.Serial(COM_PORT, BAUD)   # initialize serial port
 
 offset_alpha, offset_beta, offset_gamma = 0, 0, 0
 
-def get_angles_from_uart():
-    while ser.in_waiting:          # receive serial data...
-        data_raw = ser.readline()  
-        data = data_raw.decode(errors = "ignore")   # UTF-T decode
-        #print('接收到的原始資料：', data_raw)
-        data = data.rstrip()
-        print(data)
-        alpha, beta, gamma = data.split(' ')
-        #f.write(data, end='')
-        print ("test")
-        return (alpha, beta, gamma)
-    print("Some error happened when get angles from uart!")
-    return 0, 0, 0
 
 def update_plot(frame_number, z, plot):
     print (frame_number)
@@ -85,7 +72,7 @@ def update_plot(frame_number, z, plot):
                 
         #f.write(data, end='')
         print ("test")
-    alpha=frame_number
+    #alpha=frame_number
     for j in range(len(x)):
         #print(np.matrix([x[j], y[j], z[j]]) * Rx(i))
         temp = np.matrix([x[j], y[j], z[j]]) * Rz((float(alpha)-float(offset_alpha))*m.pi/180) * Ry((float(gamma)-float(offset_gamma))*m.pi/180) * Rx((float(beta)-float(offset_beta))*m.pi/180)
@@ -94,7 +81,8 @@ def update_plot(frame_number, z, plot):
         _y[j] = temp[0,1]
         _z[j] = temp[0,2]
     plot[0].remove()
-    plot[0] = ax.plot_trisurf(_x, _y, _z, triangles = [[0, 1, 2], [1, 2, 3], [2, 3, 0], [3, 0, 1]], color="Blue")
+    #plot[0] = ax.plot_trisurf(_x, _y, _z, triangles = [[0, 1, 2], [1, 2, 3], [2, 3, 0], [3, 0, 1]], color="Blue")
+    plot[0] = ax.plot_trisurf(_x, _y, _z, linewidth=0.2, antialiased=True, cmap="magma")
 
 def update_offset():
     print ("update_offset\n")
@@ -148,29 +136,38 @@ if __name__ == '__main__':
 #    thread.start()
 #    thread.join()
 
-    p = Process(target = detect_hotkey)
-    p.start()
+#    p = Process(target = detect_hotkey)
+#    p.start()
 
     ser = serial.Serial(COM_PORT, BAUD)   # initialize serial port
 
     root = tkinter.Tk()
-    root.wm_title("Embedding in Tk")
+    root.wm_title("Gyroscope Motion Animation")
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')    
 
     # create object
-    width = 3
+    n_radii = 8
+    n_angles = 100
 
-    n = width / (2 ** 0.5) * 0.5;
+    # Make radii and angles spaces (radius r=0 omitted to eliminate duplication).
+    radii = np.linspace(0.125, 1.0, n_radii)
+    angles = np.linspace(0, 2*np.pi, n_angles, endpoint=False)[..., np.newaxis]
 
-    x = np.array([n, -n,  n, -n]) 
-    y = np.array([n,  n, -n, -n]) 
-    z = np.array([n, -n, -n, n]) 
+    # Convert polar (radii, angles) coords to cartesian (x, y) coords.
+    # (0, 0) is manually added at this stage,  so there will be no duplicate
+    # points in the (x, y) plane.
+    x = np.append(0, (radii*np.cos(angles)).flatten())
+    y = np.append(0, (radii*np.sin(angles)).flatten())
+
+    # Compute z to make the pringle surface.
+    z = np.sin(-x*y)
 
     # plot object
     #plot = [ax.plot_surface(x, y, zarray[:,:,0], color='0.75', rstride=1, cstride=1)]
-    plot = [ax.plot_trisurf(x, y, z, triangles = [[0, 1, 2], [1, 2, 3], [2, 3, 0], [3, 0, 1]])]
+    #plot = [ax.plot_trisurf(x, y, z, triangles = [[0, 1, 2], [1, 2, 3], [2, 3, 0], [3, 0, 1]])]
+    plot = [ax.plot_trisurf(x, y, z, linewidth=0.2, antialiased=True)]
 
 
     _x = np.zeros(len(x))
@@ -194,5 +191,5 @@ if __name__ == '__main__':
     
     tkinter.mainloop()
 
-    p.join()    
+#    p.join()    
 
