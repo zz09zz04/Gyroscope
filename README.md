@@ -1,7 +1,7 @@
 ## Gyroscope
 Animate the gyroscope motion.
 
-This project is devoloped in ![python](https://img.shields.io/badge/python-3.x-green).
+This project is devoloped in ![python](https://img.shields.io/badge/python-3.8.x-green).
 
 ## Arduino
 ![Arduino IDE](https://img.shields.io/badge/Arduino%20IDE-2.0.2-green)
