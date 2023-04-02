@@ -4,7 +4,7 @@ Animate the gyroscope motion.
 This project is devoloped in ![python](https://img.shields.io/badge/python-3.x-green).
 
 ##Arduino
-(https://img.shields.io/badge/Arduino%20IDE-2.0.2-green)
+![Arduino IDE](https://img.shields.io/badge/Arduino%20IDE-2.0.2-green)
 
 Motherboard: Wemos D1 mini
 
