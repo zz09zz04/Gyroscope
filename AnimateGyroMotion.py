@@ -49,29 +49,45 @@ BAUD = 115200                         # set baud
 
 offset_alpha, offset_beta, offset_gamma = 0, 0, 0
 
-
-def update_plot(frame_number, z, plot):
-    print (frame_number)
-    alpha = 1
-    beta = 0
-    gamma = 0
+def get_angles_from_serial():
     while ser.in_waiting:          # receive serial data...
         data_raw = ser.readline()  
         data = data_raw.decode(errors = "ignore")   # UTF-T decode
-        #print('接收到的原始資料：', data_raw)
         data = data.rstrip()
         print(data)
         if len(data.split(' ')) == 3:
-            alpha, beta, gamma = data.split(' ')
+            offset_alpha, offset_beta, offset_gamma = data.split(' ')
             try:
-                alpha = float(alpha)
-                beta = float(beta)
-                gamma = float(gamma)
+                offset_alpha = float(offset_alpha)
+                offset_beta = float(offset_beta)
+                offset_gamma = float(offset_gamma)
             except ValueError:
-                pass
+                print("Get Angles data failed\n")
+                pass        #f.write(data, end='')
+            return offset_alpha, offset_beta, offset_gamma
+
+def update_plot(frame_number, z, plot):
+    #print (frame_number)
+#    alpha = 1
+#    beta = 0
+#    gamma = 0
+    alpha, beta, gamma = get_angles_from_serial()
+#    while ser.in_waiting:          # receive serial data...
+#        data_raw = ser.readline()  
+#        data = data_raw.decode(errors = "ignore")   # UTF-T decode
+#        data = data.rstrip()
+#        print(data)
+#        if len(data.split(' ')) == 3:
+#            alpha, beta, gamma = data.split(' ')
+#            try:
+#                alpha = float(alpha)
+#                beta = float(beta)
+#                gamma = float(gamma)
+#            except ValueError:
+#                pass
                 
         #f.write(data, end='')
-        print ("test")
+#    print ("test")
     #alpha=frame_number
     for j in range(len(x)):
         #print(np.matrix([x[j], y[j], z[j]]) * Rx(i))
@@ -87,25 +103,25 @@ def update_plot(frame_number, z, plot):
 def update_offset():
     print ("update_offset\n")
     global offset_alpha, offset_beta, offset_gamma
-    while ser.in_waiting:          # receive serial data...
-        data_raw = ser.readline()  
-        data = data_raw.decode(errors = "ignore")   # UTF-T decode
-        #print('接收到的原始資料：', data_raw)
-        data = data.rstrip()
-        print(data)
-        if len(data.split(' ')) == 3:
-            offset_alpha, offset_beta, offset_gamma = data.split(' ')
-            try:
-                offset_alpha = float(offset_alpha)
-                offset_beta = float(offset_beta)
-                offset_gamma = float(offset_gamma)
-            except ValueError:
-                pass        #f.write(data, end='')
-        print ("test")
-        print(offset_alpha, offset_beta, offset_gamma)
+    offset_alpha, offset_beta, offset_gamma = get_angles_from_serial()
+#    while ser.in_waiting:          # receive serial data...
+#        data_raw = ser.readline()  
+#        data = data_raw.decode(errors = "ignore")   # UTF-T decode
+#        data = data.rstrip()
+#        print(data)
+#        if len(data.split(' ')) == 3:
+#            offset_alpha, offset_beta, offset_gamma = data.split(' ')
+#            try:
+#                offset_alpha = float(offset_alpha)
+#                offset_beta = float(offset_beta)
+#                offset_gamma = float(offset_gamma)
+#            except ValueError:
+#                pass        #f.write(data, end='')
+#        print ("test")
+    print(offset_alpha, offset_beta, offset_gamma)
 
-def detect_hotkey():
-    kb.add_hotkey("ctrl+u", update_offset)
+#def detect_hotkey():
+#    kb.add_hotkey("ctrl+u", update_offset)
 
 def on_key_press(event):
     print("you pressed {}".format(event.key))
@@ -138,8 +154,11 @@ if __name__ == '__main__':
 
 #    p = Process(target = detect_hotkey)
 #    p.start()
-
-    ser = serial.Serial(COM_PORT, BAUD)   # initialize serial port
+    try:
+        ser = serial.Serial(COM_PORT, BAUD)   # initialize serial port
+    except:
+        print('Open serial port error\n')
+        pass
 
     root = tkinter.Tk()
     root.wm_title("Gyroscope Motion Animation")
