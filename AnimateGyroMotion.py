@@ -54,6 +54,10 @@ class GetAnagles:
     def __init__(self, comport, baud):
         self.comport = comport
         self.baud = baud
+        
+        self.alpha = 0
+        self.beta = 0
+        self.gamma = 0
 
         try:
             self.ser = serial.Serial(self.comport, self.baud)   # initialize serial port
@@ -66,15 +70,15 @@ class GetAnagles:
             self.data_raw = self.ser.readline()  
             self.data = self.data_raw.decode(errors = "ignore")   # UTF-T decode
             self.data = self.data.rstrip()
-            print("ser.in_waiting=",end="")
-            print(self.self.ser.in_waiting)
-            print(self.data)
-            if len(data.split(' ')) == 3:
-                alpha, beta, gamma = data.split(' ')
+            #print("ser.in_waiting=",end="")
+            #print(self.ser.in_waiting)
+            #print(self.data)
+            if len(self.data.split(' ')) == 3:
+                self.alpha, self.beta, self.gamma = self.data.split(' ')
                 try:
-                    self.alpha = float(alpha)
-                    self.beta = float(beta)
-                    self.gamma = float(gamma)
+                    self.alpha = float(self.alpha)
+                    self.beta = float(self.beta)
+                    self.gamma = float(self.gamma)
                 except ValueError:
                     print("Get Angles data failed\n")
                     pass
@@ -82,7 +86,7 @@ class GetAnagles:
     def update_base_angles(self):
         return self.alpha, self.beta, self.gamma
 
-def update_plot(frame_number, z, plot):
+def update_plot(frame_number, angles, z, plot):
     #print (frame_number)
 #    alpha = 1
 #    beta = 0
@@ -107,7 +111,7 @@ def update_plot(frame_number, z, plot):
     #alpha=frame_number
     for j in range(len(x)):
         #print(np.matrix([x[j], y[j], z[j]]) * Rx(i))
-        temp = np.matrix([x[j], y[j], z[j]]) * Rz((float(self.alpha)-float(offset_alpha))*m.pi/180) * Ry((float(self.gamma)-float(offset_gamma))*m.pi/180) * Rx((float(self.beta)-float(offset_beta))*m.pi/180)
+        temp = np.matrix([x[j], y[j], z[j]]) * Rz((float(angles.alpha)-float(offset_alpha))*m.pi/180) * Ry((float(angles.gamma)-float(offset_gamma))*m.pi/180) * Rx((float(angles.beta)-float(offset_beta))*m.pi/180)
         #print(data)
         _x[j] = temp[0,0]
         _y[j] = temp[0,1]
@@ -163,10 +167,17 @@ for i in range(nmax):
 '''
 
 if __name__ == '__main__':
+
+    print("main")
     
     angles = GetAnagles(COM_PORT, BAUD)
     thread = threading.Thread(target = angles.get_angles)
     thread.start()
+    
+    print("angles.alpha=", end="")
+    print(angles.alpha)
+    
+    #thread.join()
 
 
 #    p = Process(target = detect_hotkey)
@@ -213,7 +224,7 @@ if __name__ == '__main__':
     ax.set_xlim(-2,2)
     ax.set_ylim(-2,2)
     ax.set_zlim(-2,2)
-    animate = animation.FuncAnimation(fig, update_plot, 360, fargs=(z, plot), interval = 100)
+    animate = animation.FuncAnimation(fig, update_plot, 360, fargs=(angles, z, plot), interval = 100)
 #    plt.show()
     
     canvas = FigureCanvasTkAgg(fig, master=root)  # A tk.DrawingArea.
@@ -228,6 +239,5 @@ if __name__ == '__main__':
     tkinter.mainloop()
 
 #    p.join()    
-    thread.join()
 
 
