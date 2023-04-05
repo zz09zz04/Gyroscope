@@ -16,7 +16,7 @@ import math as m
 import serial                       # import serial module, PySerial 3.5 
 from datetime import datetime       # import time module
 
-#import threading
+import threading
 #from multiprocessing import Process
 
 import keyboard as kb
@@ -49,29 +49,45 @@ BAUD = 115200                         # set baud
 
 offset_alpha, offset_beta, offset_gamma = 0, 0, 0
 
-def get_angles_from_serial():
-    while ser.in_waiting:          # receive serial data...
-        data_raw = ser.readline()  
-        data = data_raw.decode(errors = "ignore")   # UTF-T decode
-        data = data.rstrip()
-        print(data)
-        if len(data.split(' ')) == 3:
-            offset_alpha, offset_beta, offset_gamma = data.split(' ')
-            try:
-                offset_alpha = float(offset_alpha)
-                offset_beta = float(offset_beta)
-                offset_gamma = float(offset_gamma)
-            except ValueError:
-                print("Get Angles data failed\n")
-                pass        #f.write(data, end='')
-            return offset_alpha, offset_beta, offset_gamma
+
+class GetAnagles:
+    def __init__(self, comport, baud):
+        self.comport = comport
+        self.baud = baud
+
+        try:
+            self.ser = serial.Serial(self.comport, self.baud)   # initialize serial port
+        except:
+            print('Open serial port error\n')
+            pass
+
+    def get_angles(self):
+        while True:
+            self.data_raw = self.ser.readline()  
+            self.data = self.data_raw.decode(errors = "ignore")   # UTF-T decode
+            self.data = self.data.rstrip()
+            print("ser.in_waiting=",end="")
+            print(self.self.ser.in_waiting)
+            print(self.data)
+            if len(data.split(' ')) == 3:
+                alpha, beta, gamma = data.split(' ')
+                try:
+                    self.alpha = float(alpha)
+                    self.beta = float(beta)
+                    self.gamma = float(gamma)
+                except ValueError:
+                    print("Get Angles data failed\n")
+                    pass
+
+    def update_base_angles(self):
+        return self.alpha, self.beta, self.gamma
 
 def update_plot(frame_number, z, plot):
     #print (frame_number)
 #    alpha = 1
 #    beta = 0
 #    gamma = 0
-    alpha, beta, gamma = get_angles_from_serial()
+#    alpha, beta, gamma = get_angles_from_serial()
 #    while ser.in_waiting:          # receive serial data...
 #        data_raw = ser.readline()  
 #        data = data_raw.decode(errors = "ignore")   # UTF-T decode
@@ -91,7 +107,7 @@ def update_plot(frame_number, z, plot):
     #alpha=frame_number
     for j in range(len(x)):
         #print(np.matrix([x[j], y[j], z[j]]) * Rx(i))
-        temp = np.matrix([x[j], y[j], z[j]]) * Rz((float(alpha)-float(offset_alpha))*m.pi/180) * Ry((float(gamma)-float(offset_gamma))*m.pi/180) * Rx((float(beta)-float(offset_beta))*m.pi/180)
+        temp = np.matrix([x[j], y[j], z[j]]) * Rz((float(self.alpha)-float(offset_alpha))*m.pi/180) * Ry((float(self.gamma)-float(offset_gamma))*m.pi/180) * Rx((float(self.beta)-float(offset_beta))*m.pi/180)
         #print(data)
         _x[j] = temp[0,0]
         _y[j] = temp[0,1]
@@ -100,10 +116,10 @@ def update_plot(frame_number, z, plot):
     #plot[0] = ax.plot_trisurf(_x, _y, _z, triangles = [[0, 1, 2], [1, 2, 3], [2, 3, 0], [3, 0, 1]], color="Blue")
     plot[0] = ax.plot_trisurf(_x, _y, _z, linewidth=0.2, antialiased=True, cmap="magma")
 
-def update_offset():
+def update_offset(angles):
     print ("update_offset\n")
     global offset_alpha, offset_beta, offset_gamma
-    offset_alpha, offset_beta, offset_gamma = get_angles_from_serial()
+    offset_alpha, offset_beta, offset_gamma = angles.update_base_angles()
 #    while ser.in_waiting:          # receive serial data...
 #        data_raw = ser.readline()  
 #        data = data_raw.decode(errors = "ignore")   # UTF-T decode
@@ -148,17 +164,18 @@ for i in range(nmax):
 
 if __name__ == '__main__':
     
-#    thread = threading.Thread(target = detect_hotkey)
-#    thread.start()
-#    thread.join()
+    angles = GetAnagles(COM_PORT, BAUD)
+    thread = threading.Thread(target = angles.get_angles)
+    thread.start()
+
 
 #    p = Process(target = detect_hotkey)
 #    p.start()
-    try:
-        ser = serial.Serial(COM_PORT, BAUD)   # initialize serial port
-    except:
-        print('Open serial port error\n')
-        pass
+#    try:
+#        ser = serial.Serial(COM_PORT, BAUD)   # initialize serial port
+#    except:
+#        print('Open serial port error\n')
+#        pass
 
     root = tkinter.Tk()
     root.wm_title("Gyroscope Motion Animation")
@@ -211,4 +228,6 @@ if __name__ == '__main__':
     tkinter.mainloop()
 
 #    p.join()    
+    thread.join()
+
 
